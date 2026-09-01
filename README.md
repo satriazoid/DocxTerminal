@@ -17,7 +17,7 @@ Screenshot lain taruh di [`.image/`](.image/).
 - Editor: `$EDITOR` → `$VISUAL` → `vim` → `nano` → `notepad` (Windows)
 - Nama dokumen: huruf, angka, `.` `_` `-` (path traversal ditolak)
 
-## Install — `dt` sebagai command
+## Install -`dt` sebagai command
 
 Jangan double-click `dt.exe`. Install ke PATH, panggil dari terminal.
 
@@ -85,10 +85,10 @@ dt
 
 Menu:
 
-- **List** — lihat dokumen, Enter = baca, `e` = buka editor
-- **Add** — ketik nama, Enter = buat + buka editor
-- **Edit** — pilih dokumen, buka editor
-- **Delete** — pilih, konfirmasi `y`
+- **List** lihat dokumen, Enter = baca, `e` = buka editor
+- **Add** ketik nama, Enter = buat + buka editor
+- **Edit** pilih dokumen, buka editor
+- **Delete** pilih, konfirmasi `y`
 - **Quit**
 
 ### CLI
@@ -118,7 +118,7 @@ Windows: `C:\Users\<you>\.docxterminal\`
 
 Seed dari `seeds/` hanya ditulis kalau folder kosong. Dokumen yang sudah ada tidak ditimpa.
 
-Edit langsung file `.md` juga valid — TUI/CLI baca ulang dari disk.
+Edit langsung file `.md` juga valid -TUI/CLI baca ulang dari disk.
 
 ## Layout repo
 
