@@ -142,5 +142,6 @@ go build -o dt.exe .
 ```
 
 ## License
+MIT License
 
-Private / belum ditentukan.
+Copyright (c) 2026 Akujejo.
