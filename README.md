@@ -16,6 +16,7 @@ Screenshot lain taruh di [`.image/`](.image/).
 - Seed pertama kali: `git`, `npm`, `pnpm`, `yarn`
 - Editor: `$EDITOR` → `$VISUAL` → `vim` → `nano` → `notepad` (Windows)
 - Nama dokumen: huruf, angka, `.` `_` `-` (path traversal ditolak)
+- TUI List → Enter: markdown di-render Glamour (heading, list, code fence, auto light/dark, wrap ulang saat resize). `dt show NAME` tetap print source mentah, aman untuk pipe/script.
 
 ## Install -`dt` sebagai command
 
@@ -85,7 +86,7 @@ dt
 
 Menu:
 
-- **List** lihat dokumen, Enter = baca, `e` = buka editor
+- **List** lihat dokumen, Enter = baca (Glamour), `e` = buka editor
 - **Add** ketik nama, Enter = buat + buka editor
 - **Edit** pilih dokumen, buka editor
 - **Delete** pilih, konfirmasi `y`
@@ -114,7 +115,7 @@ Alias: `ls`, `cat`, `rm`.
 └── yarn.md
 ```
 
-Windows: `C:\Users\<you>\.docxterminal\`
+Windows: `%USERPROFILE%\.docxterminal\`
 
 Seed dari `seeds/` hanya ditulis kalau folder kosong. Dokumen yang sudah ada tidak ditimpa.
 
@@ -129,6 +130,7 @@ DocxTerminal/
 ├── store.go         CRUD file
 ├── editor.go        $EDITOR / vim / nano
 ├── store_test.go
+├── tui_test.go
 ├── seeds/           template awal
 ├── .image/          screenshot README
 └── README.md

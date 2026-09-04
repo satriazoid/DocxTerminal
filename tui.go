@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -107,7 +108,7 @@ func (m tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.vp.Width = max(20, m.w-6)
 		m.vp.Height = inner
 		if m.content != "" {
-			m.vp.SetContent(m.content)
+			m.vp.SetContent(renderMarkdown(m.content, m.vp.Width))
 		}
 		return m, nil
 
@@ -120,7 +121,7 @@ func (m tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.viewName != "" {
 				if body, err := m.store.Read(m.viewName); err == nil {
 					m.content = body
-					m.vp.SetContent(body)
+					m.vp.SetContent(renderMarkdown(body, m.vp.Width))
 					m.screen = screenView
 				}
 			}
@@ -219,7 +220,7 @@ func (m tui) enter() (tea.Model, tea.Cmd) {
 		}
 		m.viewName = name
 		m.content = body
-		m.vp.SetContent(body)
+		m.vp.SetContent(renderMarkdown(body, m.vp.Width))
 		m.vp.GotoTop()
 		m.screen = screenView
 	case screenEditPick:
@@ -298,6 +299,24 @@ func (m tui) updateConfirm(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func renderMarkdown(src string, width int) string {
+	if width < 20 {
+		width = 20
+	}
+	r, err := glamour.NewTermRenderer(
+		glamour.WithAutoStyle(),
+		glamour.WithWordWrap(width),
+	)
+	if err != nil {
+		return src
+	}
+	out, err := r.Render(src)
+	if err != nil {
+		return src
+	}
+	return out
+}
+
 func (m tui) updateView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "q", "esc":
@@ -374,7 +393,7 @@ func (m tui) help() string {
 	case screenList:
 		return "j/k move · enter view · q back"
 	case screenView:
-		return "e edit · j/k scroll · q back"
+		return "rendered markdown · e edit · j/k scroll · q back"
 	case screenAdd:
 		return "enter create+edit · esc back"
 	case screenEditPick:
