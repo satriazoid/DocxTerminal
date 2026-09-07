@@ -1,0 +1,154 @@
+feat: installer scripts + improved seed templates
+
+## Summary
+
+Implement one-command installer + standardized seed templates. Users no longer need manual PATH setup or coding—installation is automatic and seeds are self-documenting for all skill levels.
+
+## Changes
+
+### 1. Installer Scripts (NEW)
+
+Add platform-specific installers that auto-detect Go, build binary, and install to GOPATH/bin:
+
+- **install.sh** — Linux, macOS, Git Bash
+  * Detects Go version & GOPATH/bin
+  * Builds binary
+  * Sets executable permission
+  * Warns if PATH needs manual setup
+  * Works with bash/sh
+
+- **install.bat** — Windows CMD
+  * Auto-detects Go & GOPATH/bin
+  * Builds with `go build -o dt.exe`
+  * Moves binary to %GOPATH%\bin
+  * Shows PATH warning if needed
+  * Uses native Windows commands (move, where)
+
+- **install.ps1** — Windows PowerShell
+  * Full PowerShell implementation
+  * Detects GOPATH & creates bin folder if missing
+  * Moves binary with Move-Item
+  * PATH verification & warning
+  * Colored output (✓ Green, ⚠️  Yellow, ❌ Red)
+
+**Result:** User runs one command → binary in PATH → works from any directory after terminal restart.
+
+### 2. Improved Seed Templates (UPDATED)
+
+Standardize all 4 seed docs with consistent format: title + description + sections + command list with explanations. Each command follows:
+
+```
+### Command Name
+**Deskripsi:** Short explanation (what it does, why use it)
+```bash
+command examples
+```
+```
+
+#### git.md
+- **Setup** — Initial configuration (user.name, user.email)
+- **Daily Workflow** — status, add, commit, pull --rebase, push
+- **Branch** — switch -c, switch, branch -d
+- **Undo / Fix** — restore --staged, restore, reset --soft, reset --hard, revert
+- **View History** — log, diff, show
+- **Remote** — clone, remote, fetch
+- **Tips** — Best practices (commit often, rebase before push, backup branch)
+
+#### npm.md
+- **Setup** — npm init, npm install
+- **Install Packages** — npm install, npm install -D, npm uninstall
+- **Run Scripts** — npm run, npm run with args, npm exec / npx
+- **Publish / Version** — npm version, npm publish
+- **Info** — npm list, npm view, npm outdated
+- **Global** — npm install -g, npm list -g
+- **Troubleshooting** — cache clean, npm audit, rm node_modules + reinstall
+
+#### yarn.md
+- **Setup** — yarn init, yarn install
+- **Install Packages** — yarn add, yarn add -D, yarn remove
+- **Run Scripts** — yarn run, yarn [SCRIPT], yarn with args
+- **Info** — yarn list, yarn why
+- **Global** — yarn global add, yarn global list
+- **Upgrade / Update** — yarn up, yarn upgrade
+- **Workspaces** — yarn workspaces list, yarn workspace WORKSPACE add
+- **Troubleshooting** — cache clean, autoclean, reinstall
+
+#### pnpm.md
+- **Setup** — pnpm init, pnpm install
+- **Install Packages** — pnpm add, pnpm add -D, pnpm remove
+- **Run Scripts** — pnpm run, pnpm [SCRIPT], pnpm with args
+- **Info** — pnpm list, pnpm why, pnpm store
+- **Global** — pnpm add -g, pnpm list -g
+- **Update / Upgrade** — pnpm up
+- **Monorepo** — pnpm recursive, pnpm filter
+- **Troubleshooting** — prune, store prune, reinstall
+
+**Format benefits:**
+- Juniors: Descriptions + examples + tips (learn context)
+- Seniors: Quick reference + organized sections (fast lookup)
+- Mixed team: Self-documenting, no confusion on command usage
+
+### 3. Updated README.md (UPDATED)
+
+- **Install section:** 3 clear paths
+  * Windows (Git Bash / CMD) — `bash install.sh` or `install.bat`
+  * Linux / macOS — `bash install.sh`
+  * Manual — `go build -o dt .` + copy to PATH
+  
+- **New PATH troubleshooting** — Warn if $GOPATH/bin not in PATH, show fix
+- **Updated repo layout** — Include install.sh, install.bat, install.ps1
+- **Clarified storage & develop sections** — More specific instructions
+
+## Testing
+
+✅ Build: `go build -o dt.exe .` → 14.5 MB binary
+✅ Seeds: Auto-load on first run (git.md 3.1KB, npm.md 3.0KB, etc.)
+✅ Commands work: `dt list`, `dt show git`, `dt add myguide`
+✅ Installer: `bash install.sh` → binary to PATH ✓
+✅ CLI from any directory: `dt list` (works from C:\ after PATH set)
+
+## User Impact
+
+**Before:**
+- Clone repo
+- Manual `go build -o dt.exe .`
+- Manual copy binary to PATH folder
+- Manual add PATH to environment variables
+- Restart terminal 2-3 times
+- Seeds are minimal (just code blocks, no explanations)
+
+**After:**
+- Clone repo
+- Run `bash install.sh` (or `install.bat` / `install.ps1`)
+- Restart terminal once
+- Done! `dt` works everywhere
+- Seeds are complete cheat sheets (command + description + examples + tips)
+- Readable for juniors & seniors
+
+## Files Changed
+
+```
+NEW:
+  install.sh              Installer for Linux/macOS/Git Bash
+  install.bat             Installer for Windows CMD
+  install.ps1             Installer for Windows PowerShell
+
+UPDATED:
+  seeds/git.md            Full git guide (1.2KB → 3.1KB, added deskripsi & organization)
+  seeds/npm.md            npm complete guide (259B → 3.0KB)
+  seeds/yarn.md           Yarn complete guide (342B → 2.6KB)
+  seeds/pnpm.md           pnpm complete guide (284B → 2.6KB)
+  README.md               Added install section, PATH troubleshooting, updated layout
+```
+
+## Breaking Changes
+
+None. Existing functionality unchanged:
+- CLI commands: `dt list`, `dt show`, `dt add`, `dt edit`, `dt delete` still work
+- TUI: Menu, list, view, add, edit, delete all unchanged
+- Storage: `~/.docxterminal/*.md` location unchanged
+- Editor detection: `$EDITOR` → `$VISUAL` → `vim` → `nano` → `notepad` unchanged
+
+## Related
+
+Closes: N/A (improvement task)

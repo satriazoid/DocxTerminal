@@ -13,59 +13,58 @@ Screenshot lain taruh di [`.image/`](.image/).
 - TUI: List / Add / Edit / Delete / Quit
 - CLI: `list`, `show`, `add`, `edit`, `delete`
 - Storage: `~/.docxterminal/*.md` (satu file = satu dokumen)
-- Seed pertama kali: `git`, `npm`, `pnpm`, `yarn`
+- Seed pertama kali: `git`, `npm`, `pnpm`, `yarn` (dengan template lengkap & deskripsi)
 - Editor: `$EDITOR` → `$VISUAL` → `vim` → `nano` → `notepad` (Windows)
 - Nama dokumen: huruf, angka, `.` `_` `-` (path traversal ditolak)
 - TUI List → Enter: markdown di-render Glamour (heading, list, code fence, auto light/dark, wrap ulang saat resize). `dt show NAME` tetap print source mentah, aman untuk pipe/script.
 
-## Install -`dt` sebagai command
-
-Jangan double-click `dt.exe`. Install ke PATH, panggil dari terminal.
+## Install
 
 Butuh [Go](https://go.dev/dl/) 1.24+.
+
+### Windows (Git Bash / CMD)
 
 ```bash
 git clone https://github.com/satriazoid/DocxTerminal.git
 cd DocxTerminal
-go build -o dt.exe .
+bash install.sh
+# atau: install.bat
+# atau: powershell -ExecutionPolicy Bypass -File install.ps1
 ```
 
-Salin binary ke folder yang ada di PATH. GOPATH/bin biasanya sudah:
+### Linux / macOS
 
 ```bash
-# Git Bash / MSYS
-mkdir -p "$(go env GOPATH)/bin"
-cp dt.exe "$(go env GOPATH)/bin/dt.exe"
+git clone https://github.com/satriazoid/DocxTerminal.git
+cd DocxTerminal
+bash install.sh
 ```
 
-```powershell
-# PowerShell
-$bin = Join-Path (go env GOPATH) "bin"
-New-Item -ItemType Directory -Force -Path $bin | Out-Null
-Copy-Item .\dt.exe (Join-Path $bin "dt.exe") -Force
+### Manual (kalau script tidak bisa)
+
+```bash
+git clone https://github.com/satriazoid/DocxTerminal.git
+cd DocxTerminal
+go build -o dt .
+# Copy dt (atau dt.exe) ke folder yang ada di PATH
+# Contoh: ~/.local/bin/ (Linux/macOS) atau %USERPROFILE%\go\bin (Windows)
 ```
 
-Cek PATH berisi `%USERPROFILE%\go\bin` (default GOPATH). Kalau `dt` belum ketemu:
+### Verifikasi
 
-1. Win + R → `sysdm.cpl` → Advanced → Environment Variables
-2. User `Path` → New → `%USERPROFILE%\go\bin`
-3. Tutup semua terminal, buka lagi
-
-Verifikasi:
+Restart terminal, lalu:
 
 ```bash
 dt
 dt list
 ```
 
-Rebuild setelah ubah kode:
+### Rebuild setelah ubah kode
 
 ```bash
-go build -o dt.exe .
-cp dt.exe "$(go env GOPATH)/bin/dt.exe"
+bash install.sh
+# atau manual: go build -o dt . && mv dt ~/.local/bin/dt
 ```
-
-`go install .` menghasilkan `docxterminal.exe` (nama modul), bukan `dt`. Pakai `go build -o dt.exe` di atas.
 
 ## Usage
 
@@ -117,21 +116,28 @@ Alias: `ls`, `cat`, `rm`.
 
 Windows: `%USERPROFILE%\.docxterminal\`
 
-Seed dari `seeds/` hanya ditulis kalau folder kosong. Dokumen yang sudah ada tidak ditimpa.
+Seed otomatis saat pertama kali (kalau folder kosong). Dokumen yang sudah ada tidak ditimpa.
 
-Edit langsung file `.md` juga valid -TUI/CLI baca ulang dari disk.
+Edit langsung file `.md` juga valid — TUI/CLI baca ulang dari disk.
 
 ## Layout repo
 
 ```
 DocxTerminal/
-├── main.go          CLI
+├── main.go          CLI commands
 ├── tui.go           menu TUI (Bubble Tea)
 ├── store.go         CRUD file
 ├── editor.go        $EDITOR / vim / nano
 ├── store_test.go
 ├── tui_test.go
+├── install.sh       Installer (Linux/macOS/Git Bash)
+├── install.bat      Installer (Windows CMD)
+├── install.ps1      Installer (Windows PowerShell)
 ├── seeds/           template awal
+│   ├── git.md
+│   ├── npm.md
+│   ├── pnpm.md
+│   └── yarn.md
 ├── .image/          screenshot README
 └── README.md
 ```
@@ -140,10 +146,19 @@ DocxTerminal/
 
 ```bash
 go test ./...
-go build -o dt.exe .
+go build -o dt .
+bash install.sh
+```
+
+Atau direct run:
+
+```bash
+go run . list
+go run . add myguide
 ```
 
 ## License
+
 MIT License
 
 Copyright (c) 2026 Akujejo.
