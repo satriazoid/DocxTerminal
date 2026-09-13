@@ -4,8 +4,6 @@ Cheat sheet Markdown berbasis terminal dengan antarmuka TUI dan CLI. Menyimpan d
 
 ![DocxTerminal TUI](.image/docxterminal-ui.png)
 
-> Lihat screenshot lainnya di folder [`.image/`](.image/).
-
 ## Fitur Utama
 
 - **Dual Mode**: Antarmuka TUI interaktif (`dt`) dan perintah CLI cepat.
