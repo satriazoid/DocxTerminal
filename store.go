@@ -38,20 +38,13 @@ func OpenStore() (*Store, error) {
 		return nil, err
 	}
 	s := &Store{Dir: dir}
-	if err := s.seedIfEmpty(); err != nil {
-		return nil, err
+	
+	if err := s.syncSeeds(); err != nil {
+		fmt.Fprintln(os.Stderr, "warning: seed sync failed:", err)
 	}
 	return s, nil
 }
-
-func (s *Store) seedIfEmpty() error {
-	docs, err := s.List()
-	if err != nil {
-		return err
-	}
-	if len(docs) > 0 {
-		return nil
-	}
+func (s *Store) syncSeeds() error {
 	entries, err := seedFS.ReadDir("seeds")
 	if err != nil {
 		return err
@@ -60,11 +53,17 @@ func (s *Store) seedIfEmpty() error {
 		if e.IsDir() || !strings.HasSuffix(e.Name(), ".md") {
 			continue
 		}
+		
+		dst := filepath.Join(s.Dir, e.Name())
+		
+		if _, err := os.Stat(dst); err == nil {
+			continue
+		}
+		
 		b, err := seedFS.ReadFile("seeds/" + e.Name())
 		if err != nil {
 			return err
 		}
-		dst := filepath.Join(s.Dir, e.Name())
 		if err := os.WriteFile(dst, b, 0644); err != nil {
 			return err
 		}

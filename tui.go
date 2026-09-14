@@ -47,8 +47,10 @@ var (
 	stNorm  = lipgloss.NewStyle().Foreground(cText)
 	stErr   = lipgloss.NewStyle().Foreground(cWarn).Bold(true)
 	stOk    = lipgloss.NewStyle().Foreground(cOk)
-	stBox   = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(cAccent).Padding(0, 1)
 	stHelp  = lipgloss.NewStyle().Foreground(cMuted)
+	
+	// stContent menggantikan stBox: hanya padding kiri agar rapi tanpa garis kotak
+	stContent = lipgloss.NewStyle().PaddingLeft(2)
 )
 
 type tui struct {
@@ -355,14 +357,17 @@ func (m tui) View() string {
 	case screenConfirm:
 		body = stErr.Render(m.confirm) + "\n\n" + stMuted.Render("y confirm · n cancel")
 	}
+	
 	status := m.status
 	if status == "" {
 		status = " "
 	}
 	help := m.help()
-	innerW := max(20, m.w-4)
-	box := stBox.Width(innerW).Render(header + "\n\n" + body)
-	return box + "\n" + stOk.Render(status) + "\n" + stHelp.Render(help)
+	
+	// Render konten tanpa kotak (border), hanya dengan padding kiri agar rapi
+	content := stContent.Render(header + "\n\n" + body)
+	
+	return content + "\n" + stOk.Render(status) + "\n" + stHelp.Render(help)
 }
 
 func (m tui) renderChoices(items []string) string {
