@@ -49,7 +49,6 @@ var (
 	stOk    = lipgloss.NewStyle().Foreground(cOk)
 	stHelp  = lipgloss.NewStyle().Foreground(cMuted)
 	
-	// stContent menggantikan stBox: hanya padding kiri agar rapi tanpa garis kotak
 	stContent = lipgloss.NewStyle().PaddingLeft(2)
 )
 
@@ -364,7 +363,6 @@ func (m tui) View() string {
 	}
 	help := m.help()
 	
-	// Render konten tanpa kotak (border), hanya dengan padding kiri agar rapi
 	content := stContent.Render(header + "\n\n" + body)
 	
 	return content + "\n" + stOk.Render(status) + "\n" + stHelp.Render(help)
