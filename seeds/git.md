@@ -1,3 +1,4 @@
+```markdown
 # Git
 
 Version control. Track changes, collaborate, manage history.
@@ -180,3 +181,4 @@ git fetch --all
 - Rebase sebelum push: `git pull --rebase`
 - Cek branch sebelum commit: `git status` + `git branch`
 - Backup branch penting sebelum reset: `git branch backup-name`
+```

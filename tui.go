@@ -41,31 +41,33 @@ var (
 	cWarn   = lipgloss.Color("203")
 	cOk     = lipgloss.Color("114")
 
-	stTitle = lipgloss.NewStyle().Bold(true).Foreground(cAccent)
-	stMuted = lipgloss.NewStyle().Foreground(cMuted)
-	stSel   = lipgloss.NewStyle().Foreground(cAccent).Background(cSelBg).Bold(true)
-	stNorm  = lipgloss.NewStyle().Foreground(cText)
-	stErr   = lipgloss.NewStyle().Foreground(cWarn).Bold(true)
-	stOk    = lipgloss.NewStyle().Foreground(cOk)
-	stHelp  = lipgloss.NewStyle().Foreground(cMuted)
-	
+	stTitle  = lipgloss.NewStyle().Bold(true).Foreground(cAccent)
+	stMuted  = lipgloss.NewStyle().Foreground(cMuted)
+	stSel    = lipgloss.NewStyle().Foreground(cAccent).Background(cSelBg).Bold(true)
+	stNorm   = lipgloss.NewStyle().Foreground(cText)
+	stErr    = lipgloss.NewStyle().Foreground(cWarn).Bold(true)
+	stOk     = lipgloss.NewStyle().Foreground(cOk)
+	stHelp   = lipgloss.NewStyle().Foreground(cMuted)
+	stSearch = lipgloss.NewStyle().Foreground(cAccent).Bold(true)
 	stContent = lipgloss.NewStyle().PaddingLeft(2)
 )
 
 type tui struct {
-	store    *Store
-	screen   screen
-	cursor   int
-	menu     []string
-	docs     []string
-	viewName string
-	content  string
-	status   string
-	input    textinput.Model
-	vp       viewport.Model
-	w, h     int
-	confirm  string
-	pending  string
+	store       *Store
+	screen      screen
+	cursor      int
+	menu        []string
+	docs        []string
+	viewName    string
+	content     string
+	status      string
+	input       textinput.Model
+	vp          viewport.Model
+	w, h        int
+	confirm     string
+	pending     string
+	searchMode  bool
+	searchQuery string
 }
 
 func newTUI(s *Store) tui {
@@ -92,13 +94,27 @@ func (m tui) refresh() tui {
 		return m
 	}
 	m.docs = docs
-	if m.cursor >= len(m.docs) && m.cursor > 0 {
-		m.cursor = len(m.docs) - 1
+	if m.cursor >= len(m.filteredDocs()) && m.cursor > 0 {
+		m.cursor = len(m.filteredDocs()) - 1
 	}
 	if m.cursor < 0 {
 		m.cursor = 0
 	}
 	return m
+}
+
+func (m tui) filteredDocs() []string {
+	if m.searchQuery == "" {
+		return m.docs
+	}
+	q := strings.ToLower(m.searchQuery)
+	var result []string
+	for _, d := range m.docs {
+		if strings.Contains(strings.ToLower(d), q) {
+			result = append(result, d)
+		}
+	}
+	return result
 }
 
 func (m tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -139,12 +155,29 @@ func (m tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.screen == screenView {
 			return m.updateView(msg)
 		}
+
+		if m.searchMode {
+			return m.updateSearch(msg)
+		}
+
+		if (m.screen == screenList || m.screen == screenEditPick || m.screen == screenDelete) && msg.String() == "/" {
+			m.searchMode = true
+			m.searchQuery = ""
+			m.cursor = 0
+			return m, nil
+		}
+
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
 		case "q", "esc":
 			if m.screen == screenMenu {
 				return m, tea.Quit
+			}
+			if m.searchQuery != "" && (m.screen == screenList || m.screen == screenEditPick || m.screen == screenDelete) {
+				m.searchQuery = ""
+				m.cursor = 0
+				return m, nil
 			}
 			m.screen = screenMenu
 			m.cursor = 0
@@ -170,12 +203,38 @@ func (m tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func (m tui) updateSearch(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "esc":
+		m.searchMode = false
+		m.searchQuery = ""
+		m.cursor = 0
+		return m, nil
+	case "enter":
+		m.searchMode = false
+		return m, nil
+	case "backspace":
+		if len(m.searchQuery) > 0 {
+			m.searchQuery = m.searchQuery[:len(m.searchQuery)-1]
+			m.cursor = 0
+		}
+		return m, nil
+	default:
+		s := msg.String()
+		if len(s) == 1 && s[0] >= 32 && s[0] <= 126 {
+			m.searchQuery += s
+			m.cursor = 0
+		}
+		return m, nil
+	}
+}
+
 func (m tui) listLen() int {
 	switch m.screen {
 	case screenMenu:
 		return len(m.menu)
 	case screenList, screenEditPick, screenDelete:
-		return len(m.docs)
+		return len(m.filteredDocs())
 	}
 	return 1
 }
@@ -209,11 +268,12 @@ func (m tui) enter() (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 	case screenList:
-		if len(m.docs) == 0 {
+		filtered := m.filteredDocs()
+		if len(filtered) == 0 {
 			m.status = "empty"
 			return m, nil
 		}
-		name := m.docs[m.cursor]
+		name := filtered[m.cursor]
 		body, err := m.store.Read(name)
 		if err != nil {
 			m.status = err.Error()
@@ -225,17 +285,19 @@ func (m tui) enter() (tea.Model, tea.Cmd) {
 		m.vp.GotoTop()
 		m.screen = screenView
 	case screenEditPick:
-		if len(m.docs) == 0 {
+		filtered := m.filteredDocs()
+		if len(filtered) == 0 {
 			m.status = "empty"
 			return m, nil
 		}
-		return m.openEditor(m.docs[m.cursor])
+		return m.openEditor(filtered[m.cursor])
 	case screenDelete:
-		if len(m.docs) == 0 {
+		filtered := m.filteredDocs()
+		if len(filtered) == 0 {
 			m.status = "empty"
 			return m, nil
 		}
-		m.pending = m.docs[m.cursor]
+		m.pending = filtered[m.cursor]
 		m.confirm = "delete " + m.pending + "?"
 		m.screen = screenConfirm
 	}
@@ -344,11 +406,32 @@ func (m tui) View() string {
 	case screenMenu:
 		body = m.renderChoices(m.menu)
 	case screenList:
-		body = stMuted.Render("list") + "\n" + m.renderDocs()
+		title := "list"
+		if m.searchMode || m.searchQuery != "" {
+			title += " " + stSearch.Render("/"+m.searchQuery)
+			if m.searchMode {
+				title += stMuted.Render("▍") // kursor berkedip
+			}
+		}
+		body = stMuted.Render(title) + "\n" + m.renderDocs()
 	case screenEditPick:
-		body = stMuted.Render("edit — pick") + "\n" + m.renderDocs()
+		title := "edit — pick"
+		if m.searchMode || m.searchQuery != "" {
+			title += " " + stSearch.Render("/"+m.searchQuery)
+			if m.searchMode {
+				title += stMuted.Render("▍")
+			}
+		}
+		body = stMuted.Render(title) + "\n" + m.renderDocs()
 	case screenDelete:
-		body = stMuted.Render("delete — pick") + "\n" + m.renderDocs()
+		title := "delete — pick"
+		if m.searchMode || m.searchQuery != "" {
+			title += " " + stSearch.Render("/"+m.searchQuery)
+			if m.searchMode {
+				title += stMuted.Render("▍")
+			}
+		}
+		body = stMuted.Render(title) + "\n" + m.renderDocs()
 	case screenAdd:
 		body = stMuted.Render("add") + "\n\n" + m.input.View()
 	case screenView:
@@ -356,15 +439,15 @@ func (m tui) View() string {
 	case screenConfirm:
 		body = stErr.Render(m.confirm) + "\n\n" + stMuted.Render("y confirm · n cancel")
 	}
-	
+
 	status := m.status
 	if status == "" {
 		status = " "
 	}
 	help := m.help()
-	
+
 	content := stContent.Render(header + "\n\n" + body)
-	
+
 	return content + "\n" + stOk.Render(status) + "\n" + stHelp.Render(help)
 }
 
@@ -383,10 +466,14 @@ func (m tui) renderChoices(items []string) string {
 }
 
 func (m tui) renderDocs() string {
-	if len(m.docs) == 0 {
+	filtered := m.filteredDocs()
+	if len(filtered) == 0 {
+		if m.searchQuery != "" {
+			return stMuted.Render("\n(no match for \"" + m.searchQuery + "\")")
+		}
 		return stMuted.Render("\n(no documents)")
 	}
-	return m.renderChoices(m.docs)
+	return m.renderChoices(filtered)
 }
 
 func (m tui) help() string {
@@ -394,15 +481,24 @@ func (m tui) help() string {
 	case screenMenu:
 		return "j/k move · enter · q quit"
 	case screenList:
-		return "j/k move · enter view · q back"
+		if m.searchMode {
+			return "type to filter · enter done · esc cancel"
+		}
+		return "/ search · j/k move · enter view · q back"
 	case screenView:
 		return "rendered markdown · e edit · j/k scroll · q back"
 	case screenAdd:
 		return "enter create+edit · esc back"
 	case screenEditPick:
-		return "j/k move · enter edit · q back"
+		if m.searchMode {
+			return "type to filter · enter done · esc cancel"
+		}
+		return "/ search · j/k move · enter edit · q back"
 	case screenDelete:
-		return "j/k move · enter delete · q back"
+		if m.searchMode {
+			return "type to filter · enter done · esc cancel"
+		}
+		return "/ search · j/k move · enter delete · q back"
 	case screenConfirm:
 		return "y / n"
 	}
