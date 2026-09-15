@@ -2,7 +2,7 @@
 
 Cheat sheet Markdown berbasis terminal dengan antarmuka TUI dan CLI. Menyimpan dokumen sebagai file `.md` individual untuk kemudahan pengelolaan dan versi kontrol.
 
-![DocxTerminal TUI](.image/docxterminal-ui.png)
+![DocxTerminal TUI](.image/docxterminal-ui-v1.2.png)
 
 ## Fitur Utama
 
